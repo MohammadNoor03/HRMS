@@ -147,7 +147,7 @@ namespace HRMS.Controllers
 
 
         }
-        [HttpPut] //Resors Update
+        [HttpPut("{id:long}")] //Resors Update
         public IActionResult UpDate([FromQuery]long id,[FromBody]SaveEmployeeDto employeeDto)
         {
             if (id != employeeDto.Id)
