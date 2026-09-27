@@ -122,7 +122,7 @@ namespace HRMS.Controllers
 
         }
 
-        [HttpPost]
+        [HttpPost("{id:long}")]
         public IActionResult Add(SaveEmployeeDto employeeDto)
         {
             var employee = new Employee()
