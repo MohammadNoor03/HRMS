@@ -4,7 +4,7 @@ namespace HRMS.Dtos.Employees
 {
     public class SaveEmployeeDto
     {
-        public long? Id { get; set; }
+        public long Id { get; set; }
         public string FirstNmae { get; set; }
 
         public string LastNmae { get; set; }

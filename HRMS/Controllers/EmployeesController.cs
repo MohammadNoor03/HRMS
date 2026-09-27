@@ -11,8 +11,15 @@ namespace HRMS.Controllers
     [Route("api/[controller]")] //api/Employees
     [ApiController]
     public class EmployeesController : ControllerBase
+
+
     {
-        public List<Employee> employees = new List<Employee>()
+
+        public EmployeesController()
+        {
+
+        }
+        public static List<Employee> employees = new List<Employee>()
         {
          new Employee(){Id=1,FirstNmae="Ahmad",LastNmae="Alnajjar",Email="ahmadnajar@gmail.com",BirthDate=new DateTime(1995,1,25),PhoneNumber="0792062909",IsActive=true,StartDate=new DateTime(),Salary=1000},
          new Employee(){Id=2,FirstNmae="Omar",LastNmae="Khatib",Email="omar.khatib@gmail.com",BirthDate=new DateTime(1998,5,14),PhoneNumber="0798765432",IsActive=true,StartDate=new DateTime(2022,3,1),Salary=1200},
@@ -42,13 +49,38 @@ namespace HRMS.Controllers
 
         //**********************************************************************************************
 
-        [HttpGet("GetByCriteria")]// بترجع الموظفين بناءا على position
-        public IActionResult GetByCriteria(string? position)
+        //[HttpGet("GetByCriteria")]// بترجع الموظفين بناءا على position
+        //public IActionResult GetByCriteria(string? position , string? name)
+
+        //{
+        //    //
+        //    var data = from emp in employees
+        //               where (position == null || emp.Position.ToUpper().Contains( position.ToUpper()))&&
+        //               (name ==  null || emp.FirstNmae.ToUpper().Contains( name.ToUpper()))
+        //               orderby emp.Id descending
+        //               select new EmployeeDto
+        //               {
+        //                   Id = emp.Id,
+        //                   Name = emp.FirstNmae + " " + emp.LastNmae,
+        //                   Position = emp.Position,
+        //                   BirthDate = emp.BirthDate,
+        //                   StartDate = emp.StartDate,
+        //                   EndDate = emp.EndDate
+        //                   //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
+        //               };
+
+        //    return Ok(data);
+        //}
+
+
+        [HttpGet]// بترجع الموظفين بناءا على position
+        public IActionResult GetByCriteria([FromQuery]SearchEmployeeDTO searchemployeeDTO)
 
         {
             //
             var data = from emp in employees
-                       where (position ==null|| emp.Position == position)
+                       where (searchemployeeDTO.Position == null || emp.Position.ToUpper().Contains(searchemployeeDTO.Position.ToUpper())) &&
+                       (searchemployeeDTO.Name == null || emp.FirstNmae.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
                        orderby emp.Id descending
                        select new EmployeeDto
                        {
@@ -58,19 +90,19 @@ namespace HRMS.Controllers
                            BirthDate = emp.BirthDate,
                            StartDate = emp.StartDate,
                            EndDate = emp.EndDate
-                           //بحدد فق المعلومات الي بدب ارجعها لان بعض المعلومات حساسة صعب ارجعها
+                           //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
                        };
-            
-              return Ok(data);
+
+            return Ok(data);
         }
 
 
 
 
-        [HttpGet("GetById")]
+        [HttpGet("{id:long}")]//Route parameter
         public IActionResult GetById(long id)
         {
-            var data = employees.Select(emp=> new EmployeeDto
+            var data = employees.Select(emp => new EmployeeDto
             {
                 Id = emp.Id,
                 Name = emp.FirstNmae + " " + emp.LastNmae,
@@ -79,10 +111,10 @@ namespace HRMS.Controllers
                 StartDate = emp.StartDate,
                 EndDate = emp.EndDate
 
-            } ) .FirstOrDefault(emp => emp.Id == id);
+            }).FirstOrDefault(emp => emp.Id == id);
 
-
-            if(data == null)
+            // var data = employees.SingleOrDefault(emp=>emp.Id == id);
+            if (data == null)
             {
                 return NotFound("Employee Not Found");
             }
@@ -95,7 +127,7 @@ namespace HRMS.Controllers
         {
             var employee = new Employee()
             {
-                Id = (employees.LastOrDefault()?.Id ?? 0)+1,
+                Id = (employees.LastOrDefault()?.Id ?? 0) + 1,
                 FirstNmae = employeeDto.FirstNmae,
                 LastNmae = employeeDto.LastNmae,
                 Position = employeeDto.Position,
@@ -111,7 +143,56 @@ namespace HRMS.Controllers
             employees.Add(employee);
 
             return Ok(employee.Id);
+
+
+
         }
+        [HttpPut] //Resors Update
+        public IActionResult UpDate([FromQuery]long id,[FromBody]SaveEmployeeDto employeeDto)
+        {
+            if (id != employeeDto.Id)
+            {
+                return BadRequest("Id Mismatch"); //404
+            }
+            var employee = employees.FirstOrDefault(x => x.Id == employeeDto.Id);
+            if (employee == null)
+            {
+                return NotFound("Employee Dose Not Exist");
+            }
+            employee.FirstNmae = employeeDto.FirstNmae;
+            employee.LastNmae = employeeDto.LastNmae;
+            employee.PhoneNumber = employeeDto.PhoneNumber;
+            employee.BirthDate = employeeDto.BirthDate;
+            employee.StartDate = employeeDto.StartDate;
+            employee.EndDate = employeeDto.EndDate;
+            employee.Email = employeeDto.Email;
+            employee.IsActive = employeeDto.IsActive;
+            employee.Position = employeeDto.Position;
+
+            return Ok();
+        }
+        [HttpDelete("{id:long}")]
+        public IActionResult Delete(long id)
+        {
+            var employee = employees.FirstOrDefault(x => x.Id == id);
+            if (employee == null)
+            {
+                return NotFound("Employee Dose Not Exist");
+            }
+
+            employees.Remove(employee);
+            return Ok();
+        }
+
+        // Query Parameter => [FromQuery]
+        // Request Body => [FromBody]
+
+        // Simple Data type => string, int, long... --> (By Default) Query Parameters
+        // Complix Data type => Model, Dto, Object.. --> (By Default) Request Body
+
+        // Method Can Use Multiple Parameters Of Type [fromQuery]
+        // Method Can Not Use Multiple Parameters Of Type [FromBody]
+
 
 
 
@@ -167,7 +248,7 @@ namespace HRMS.Controllers
 
     }
 
-  
+
 }
 
 
