@@ -1,4 +1,5 @@
-﻿using HRMS.Dtos.Employees;
+﻿using HRMS.DbContexts;
+using HRMS.Dtos.Employees;
 using HRMS.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,17 @@ namespace HRMS.Controllers
 
     {
 
-        public EmployeesController()
-        {
+        //HRMSContext _dbContext = new HRMSContext();
 
+        // Dependency Injection
+        private readonly HMRSContext _dbContext;
+
+        public EmployeesController(HMRSContext dbContext)
+        {
+            _dbContext = dbContext;
         }
+
+
         public static List<Employee> employees = new List<Employee>()
         {
          new Employee(){Id=1,FirstNmae="Ahmad",LastNmae="Alnajjar",Email="ahmadnajar@gmail.com",BirthDate=new DateTime(1995,1,25),PhoneNumber="0792062909",IsActive=true,StartDate=new DateTime(),Salary=1000},
@@ -78,7 +86,9 @@ namespace HRMS.Controllers
 
         {
             //
-            var data = from emp in employees
+            var data = from emp in _dbContext.Employees
+                       from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
+                       from Manger in _dbContext.Employees.Where(x=>x.Id==emp.MangerId).DefaultIfEmpty()
                        where (searchemployeeDTO.Position == null || emp.Position.ToUpper().Contains(searchemployeeDTO.Position.ToUpper())) &&
                        (searchemployeeDTO.Name == null || emp.FirstNmae.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
                        orderby emp.Id descending
@@ -89,9 +99,19 @@ namespace HRMS.Controllers
                            Position = emp.Position,
                            BirthDate = emp.BirthDate,
                            StartDate = emp.StartDate,
-                           EndDate = emp.EndDate
+                           EndDate = emp.EndDate,
+                           PhoneNumber = emp.PhoneNumber,
+                           IsActive = emp.IsActive,
+                           Salary = emp.Salary,
+                           Email = emp.Email,
+                           DepartmentId = emp.DepartmentId,
+                           MangerId = emp.MangerId,
+                           DepartmentName = dep.Name,
+                           MangerName= Manger.FirstNmae + " " + Manger.LastNmae
+
                            //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
                        };
+
 
             return Ok(data);
         }
@@ -127,7 +147,7 @@ namespace HRMS.Controllers
         {
             var employee = new Employee()
             {
-                Id = (employees.LastOrDefault()?.Id ?? 0) + 1,
+                 Id = (employees.LastOrDefault()?.Id ?? 0) + 1,
                 FirstNmae = employeeDto.FirstNmae,
                 LastNmae = employeeDto.LastNmae,
                 Position = employeeDto.Position,

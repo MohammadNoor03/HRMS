@@ -26,7 +26,8 @@ namespace HRMS.Models
 
         public decimal? Salary { get; set; }
 
-
+        public long? DepartmentId { get; set; }
+        public long? MangerId { get; set; }
 
     }
 }
