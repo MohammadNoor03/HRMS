@@ -85,7 +85,7 @@ namespace HRMS.Controllers
         {
             //
             var data = from emp in _dbContext.Employees
-                       from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
+                      from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
                        from Manger in _dbContext.Employees.Where(x=>x.Id==emp.ManagerId).DefaultIfEmpty()
                        where (searchemployeeDTO.Position == null || emp.Position.ToUpper().Contains(searchemployeeDTO.Position.ToUpper())) &&
                        (searchemployeeDTO.Name == null || emp.FirstName.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
