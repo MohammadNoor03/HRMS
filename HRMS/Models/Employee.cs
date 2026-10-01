@@ -6,9 +6,9 @@ namespace HRMS.Models
     {
         // معلومات اجبارية ومعلومات اختيارية
         public long Id { get; set; }
-        public string FirstNmae { get; set; }
+        public string FirstName { get; set; }
 
-        public string LastNmae { get; set; }
+        public string LastName { get; set; }
 
         
         public string? Email { get; set; } // (?)==>  Optional / Nullable
@@ -27,7 +27,7 @@ namespace HRMS.Models
         public decimal? Salary { get; set; }
 
         public long? DepartmentId { get; set; }
-        public long? MangerId { get; set; }
+        public long? ManagerId { get; set; }
 
     }
 }

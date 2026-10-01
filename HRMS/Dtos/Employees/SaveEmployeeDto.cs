@@ -24,5 +24,8 @@ namespace HRMS.Dtos.Employees
         public DateTime? EndDate { get; set; } //Optional
 
         public decimal? Salary { get; set; }
+
+        public long? DepartmentId { get; set; }
+        public long? MangerId { get; set; }
     }
 }

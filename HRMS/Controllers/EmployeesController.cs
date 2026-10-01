@@ -3,7 +3,9 @@ using HRMS.Dtos.Employees;
 using HRMS.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.Intrinsics.Arm;
 
 namespace HRMS.Controllers
 {
@@ -19,6 +21,9 @@ namespace HRMS.Controllers
         //HRMSContext _dbContext = new HRMSContext();
 
         // Dependency Injection
+
+        // read only (بعطيه قيمة عند الانشاء او في الكونستركتر)
+
         private readonly HMRSContext _dbContext;
 
         public EmployeesController(HMRSContext dbContext)
@@ -27,14 +32,7 @@ namespace HRMS.Controllers
         }
 
 
-        public static List<Employee> employees = new List<Employee>()
-        {
-         new Employee(){Id=1,FirstNmae="Ahmad",LastNmae="Alnajjar",Email="ahmadnajar@gmail.com",BirthDate=new DateTime(1995,1,25),PhoneNumber="0792062909",IsActive=true,StartDate=new DateTime(),Salary=1000},
-         new Employee(){Id=2,FirstNmae="Omar",LastNmae="Khatib",Email="omar.khatib@gmail.com",BirthDate=new DateTime(1998,5,14),PhoneNumber="0798765432",IsActive=true,StartDate=new DateTime(2022,3,1),Salary=1200},
-         new Employee(){Id=3,FirstNmae="Sara",LastNmae="Mansour",Email="sara.mansour@gmail.com",BirthDate=new DateTime(2000,11,30),PhoneNumber="0781234567",IsActive=false,StartDate=new DateTime(2023,1,15),Salary=950},
-         new Employee(){Id=4,FirstNmae="Khaled",LastNmae="Othman",Email="khaled.othman@gmail.com",BirthDate=new DateTime(1992,8,9),PhoneNumber="0775554321",IsActive=true,StartDate=new DateTime(2020,6,10),Salary=1500}
-        };
-
+       
 
         //[HttpGet("GetByCriteria")]// بترجع كل معلومات الموظفين الموجودين عندي
         //public IActionResult GetByCriteria()
@@ -88,14 +86,14 @@ namespace HRMS.Controllers
             //
             var data = from emp in _dbContext.Employees
                        from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
-                       from Manger in _dbContext.Employees.Where(x=>x.Id==emp.MangerId).DefaultIfEmpty()
+                       from Manger in _dbContext.Employees.Where(x=>x.Id==emp.ManagerId).DefaultIfEmpty()
                        where (searchemployeeDTO.Position == null || emp.Position.ToUpper().Contains(searchemployeeDTO.Position.ToUpper())) &&
-                       (searchemployeeDTO.Name == null || emp.FirstNmae.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
+                       (searchemployeeDTO.Name == null || emp.FirstName.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
                        orderby emp.Id descending
                        select new EmployeeDto
                        {
                            Id = emp.Id,
-                           Name = emp.FirstNmae + " " + emp.LastNmae,
+                           Name = emp.FirstName + " " + emp.LastName,
                            Position = emp.Position,
                            BirthDate = emp.BirthDate,
                            StartDate = emp.StartDate,
@@ -105,9 +103,9 @@ namespace HRMS.Controllers
                            Salary = emp.Salary,
                            Email = emp.Email,
                            DepartmentId = emp.DepartmentId,
-                           MangerId = emp.MangerId,
+                           MangerId = emp.ManagerId,
                            DepartmentName = dep.Name,
-                           MangerName= Manger.FirstNmae + " " + Manger.LastNmae
+                           MangerName= Manger.FirstName + " " + Manger.LastName
 
                            //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
                        };
@@ -122,14 +120,22 @@ namespace HRMS.Controllers
         [HttpGet("{id:long}")]//Route parameter
         public IActionResult GetById(long id)
         {
-            var data = employees.Select(emp => new EmployeeDto
+            var data = _dbContext.Employees.Select(emp => new EmployeeDto
             {
                 Id = emp.Id,
-                Name = emp.FirstNmae + " " + emp.LastNmae,
+                Name = emp.FirstName + " " + emp.LastName,
                 Position = emp.Position,
                 BirthDate = emp.BirthDate,
                 StartDate = emp.StartDate,
-                EndDate = emp.EndDate
+                EndDate = emp.EndDate,
+                PhoneNumber = emp.PhoneNumber,
+                IsActive = emp.IsActive,
+                Salary = emp.Salary,
+                Email = emp.Email,
+                DepartmentId = emp.DepartmentId,
+                MangerId = emp.ManagerId,
+                DepartmentName = "",
+                MangerName = " " 
 
             }).FirstOrDefault(emp => emp.Id == id);
 
@@ -142,14 +148,15 @@ namespace HRMS.Controllers
 
         }
 
-        [HttpPost("{id:long}")]
+        [HttpPost]
         public IActionResult Add(SaveEmployeeDto employeeDto)
         {
             var employee = new Employee()
             {
-                 Id = (employees.LastOrDefault()?.Id ?? 0) + 1,
-                FirstNmae = employeeDto.FirstNmae,
-                LastNmae = employeeDto.LastNmae,
+                // لا تعطي قيمة لل id لما بدك تبعثوا على DB
+                 Id =0, //(employees.LastOrDefault()?.Id ?? 0) + 1,
+                FirstName = employeeDto.FirstNmae,
+                LastName = employeeDto.LastNmae,
                 Position = employeeDto.Position,
                 BirthDate = employeeDto.BirthDate,
                 StartDate = employeeDto.StartDate,
@@ -158,10 +165,13 @@ namespace HRMS.Controllers
                 IsActive = employeeDto.IsActive,
                 PhoneNumber = employeeDto.PhoneNumber,
                 Salary = employeeDto.Salary,
+                DepartmentId = employeeDto.DepartmentId,
+                ManagerId = employeeDto.MangerId,
+
             };
 
-            employees.Add(employee);
-
+            _dbContext.Employees.Add(employee);
+            _dbContext.SaveChanges();
             return Ok(employee.Id);
 
 
@@ -174,13 +184,13 @@ namespace HRMS.Controllers
             {
                 return BadRequest("Id Mismatch"); //404
             }
-            var employee = employees.FirstOrDefault(x => x.Id == employeeDto.Id);
+            var employee = _dbContext.Employees.FirstOrDefault(x => x.Id == employeeDto.Id);
             if (employee == null)
             {
                 return NotFound("Employee Dose Not Exist");
             }
-            employee.FirstNmae = employeeDto.FirstNmae;
-            employee.LastNmae = employeeDto.LastNmae;
+            employee.FirstName = employeeDto.FirstNmae;
+            employee.LastName = employeeDto.LastNmae;
             employee.PhoneNumber = employeeDto.PhoneNumber;
             employee.BirthDate = employeeDto.BirthDate;
             employee.StartDate = employeeDto.StartDate;
@@ -188,19 +198,24 @@ namespace HRMS.Controllers
             employee.Email = employeeDto.Email;
             employee.IsActive = employeeDto.IsActive;
             employee.Position = employeeDto.Position;
+            employee.DepartmentId = employeeDto.DepartmentId;
+            employee.ManagerId = employeeDto.MangerId;
+
+            _dbContext.SaveChanges();
 
             return Ok();
         }
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
         {
-            var employee = employees.FirstOrDefault(x => x.Id == id);
+            var employee = _dbContext.Employees.FirstOrDefault(x => x.Id == id);
             if (employee == null)
             {
                 return NotFound("Employee Dose Not Exist");
             }
 
-            employees.Remove(employee);
+            _dbContext.Employees.Remove(employee);
+            _dbContext.SaveChanges();
             return Ok();
         }
 
