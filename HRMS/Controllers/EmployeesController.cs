@@ -3,6 +3,7 @@ using HRMS.Dtos.Employees;
 using HRMS.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Intrinsics.Arm;
@@ -85,8 +86,8 @@ namespace HRMS.Controllers
         {
             //
             var data = from emp in _dbContext.Employees
-                      from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
-                       from Manger in _dbContext.Employees.Where(x=>x.Id==emp.ManagerId).DefaultIfEmpty()
+                      //from dep in _dbContext.Departments.Where(x => x.Id==emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
+                      // from Manger in _dbContext.Employees.Where(x=>x.Id==emp.ManagerId).DefaultIfEmpty()
                        where (searchemployeeDTO.Position == null || emp.Position.ToUpper().Contains(searchemployeeDTO.Position.ToUpper())) &&
                        (searchemployeeDTO.Name == null || emp.FirstName.ToUpper().Contains(searchemployeeDTO.Name.ToUpper()))
                        orderby emp.Id descending
@@ -104,8 +105,8 @@ namespace HRMS.Controllers
                            Email = emp.Email,
                            DepartmentId = emp.DepartmentId,
                            MangerId = emp.ManagerId,
-                           DepartmentName = dep.Name,
-                           MangerName= Manger.FirstName + " " + Manger.LastName
+                           DepartmentName = emp.Department.Name,
+                           MangerName= emp.Manager.FirstName + " " + emp.Manager.LastName
 
                            //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
                        };
@@ -120,6 +121,7 @@ namespace HRMS.Controllers
         [HttpGet("{id:long}")]//Route parameter
         public IActionResult GetById(long id)
         {
+            // Projection : Select => Navigation Property
             var data = _dbContext.Employees.Select(emp => new EmployeeDto
             {
                 Id = emp.Id,
@@ -134,12 +136,20 @@ namespace HRMS.Controllers
                 Email = emp.Email,
                 DepartmentId = emp.DepartmentId,
                 MangerId = emp.ManagerId,
-                DepartmentName = "",
-                MangerName = " " 
+                DepartmentName = emp.Department.Name,
+                MangerName = emp.Manager.FirstName + " " + emp.Manager.LastName
 
             }).FirstOrDefault(emp => emp.Id == id);
 
-            // var data = employees.SingleOrDefault(emp=>emp.Id == id);
+            // Eager Loading : Include
+
+            //var data = _dbContext.Employees.Include(x=>x.Department).Include(x=>x.Manager)
+            //    .FirstOrDefault(y=>y.Id==id);
+
+            // Eager Loading : Include
+            // Lazy Loading لا تستخدم
+            // Projection : Select => Navigation Property افضل وحدة
+
             if (data == null)
             {
                 return NotFound("Employee Not Found");

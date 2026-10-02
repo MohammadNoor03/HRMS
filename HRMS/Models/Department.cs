@@ -12,7 +12,7 @@ namespace HRMS.Models
         public int? FloorNumber { get; set; } // Nullable integer for optional property
 
         //Navigation prop
-        public ICollection<Employee>? Employee { get; set; } // Many Employees
+      //  public ICollection<Employee>? Employee { get; set; } // Many Employees
 
          
     }
