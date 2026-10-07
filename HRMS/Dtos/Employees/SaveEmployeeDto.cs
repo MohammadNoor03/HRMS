@@ -12,7 +12,7 @@ namespace HRMS.Dtos.Employees
          
         public string? Email { get; set; } // (?)==>  Optional / Nullable
         
-        public string Position { get; set; }
+        public long? PositionId { get; set; }
 
         public DateTime BirthDate { get; set; }
         public string? PhoneNumber { get; set; }
