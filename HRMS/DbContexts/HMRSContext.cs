@@ -31,15 +31,24 @@ namespace HRMS.DbContexts
                 new Lookup { Id = 7, MajorCode = 1, MinorCode = 2, Name = "Adminstrative" },
                 new Lookup { Id = 8, MajorCode = 1, MinorCode = 3, Name = "Technical" }
             );
+
+            // Seeding Admin
+            //BCrypt.Net.BCrypt.HashPassword("Admin@123") ===>> "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG"
+            modelBuilder.Entity<User>().HasData(
+                new User { Id = 1, Username = "Admin", IsAdmin = true, HashedPassword= "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG" }
+            );
         }
+
+
 
         // Tables => DbSet
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Lookup> Lookups { get; set; }
+        public DbSet<User> Users { get; set; }
 
-         
-            
+
+
 
     }
 }

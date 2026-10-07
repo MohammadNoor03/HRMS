@@ -4,6 +4,7 @@ using HRMS.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Migrations
 {
     [DbContext(typeof(HMRSContext))]
-    partial class HMRSContextModelSnapshot : ModelSnapshot
+    [Migration("20261007122008_new_table_users")]
+    partial class new_table_users
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,15 +215,6 @@ namespace HRMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            HashedPassword = "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG",
-                            IsAdmin = true,
-                            Username = "Admin"
-                        });
                 });
 
             modelBuilder.Entity("HRMS.Models.Employee", b =>
