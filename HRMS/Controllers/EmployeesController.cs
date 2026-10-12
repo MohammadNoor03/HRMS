@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Intrinsics.Arm;
+using System.Security.Claims;
 
 namespace HRMS.Controllers
 {
@@ -77,7 +78,7 @@ namespace HRMS.Controllers
 
         //    return Ok(data);
         //}
-
+       
 
         [HttpGet]// بترجع الموظفين بناءا على position
         public IActionResult GetByCriteria([FromQuery] SearchEmployeeDTO searchemployeeDTO)
@@ -85,6 +86,11 @@ namespace HRMS.Controllers
 
             try
             {
+                // Extract From Token : Role, UserId
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+
                 var data = from emp in _dbContext.Employees
                            from dep in _dbContext.Departments.Where(x => x.Id == emp.DepartmentId).DefaultIfEmpty()// join // inner join / left join(.DefaultIfEmpty())
                            from Manger in _dbContext.Employees.Where(x => x.Id == emp.ManagerId).DefaultIfEmpty()
@@ -108,10 +114,16 @@ namespace HRMS.Controllers
                                DepartmentId = emp.DepartmentId,
                                MangerId = emp.ManagerId,
                                DepartmentName = dep.Name,
-                               MangerName = Manger.FirstName + " " + Manger.LastName
-
+                               MangerName = Manger.FirstName + " " + Manger.LastName,
+                               UseerId=emp.UserId
+                             
                                //بحدد فقط المعلومات الي بدي ارجعها لان بعض المعلومات حساسة صعب ارجعها
                            };
+
+                if (role?.ToUpper() != "ADMIN" && role?.ToUpper() != "HR")
+                {
+                    data = data.Where(x => x.UseerId== long.Parse(userId));
+                }
 
 
                 return Ok(data);
@@ -176,13 +188,28 @@ namespace HRMS.Controllers
 
 
         }
-
+        [Authorize(Roles = "HR,Admin")]
         [HttpPost]
         public IActionResult Add(SaveEmployeeDto employeeDto)
         {
 
             try
             {
+
+                var user = new User()
+                {
+                    Id = 0,
+                    Username = $"{employeeDto.FirstNmae}_{employeeDto.LastNmae}_HRMS",// Ahmad Nasser -> Ahmad_Nasser_HRMS
+                    HashedPassword = BCrypt.Net.BCrypt.HashPassword($"{employeeDto.FirstNmae}@123"),
+                    IsAdmin = false
+                };
+                var existUser = _dbContext.Users.Any(x => x.Username.ToUpper() == user.Username.ToUpper());
+                if (existUser)
+                {
+                    return BadRequest("Cannot Add this employee : username already exist. please select another name");
+                }
+                _dbContext.Users.Add(user);
+
                 var employee = new Employee()
                 {
                     // لا تعطي قيمة لل id لما بدك تبعثوا على DB
@@ -199,6 +226,8 @@ namespace HRMS.Controllers
                     Salary = employeeDto.Salary,
                     DepartmentId = employeeDto.DepartmentId,
                     ManagerId = employeeDto.MangerId,
+                   // UserId = user.Id
+                   User=user
 
                 };
 
@@ -214,7 +243,7 @@ namespace HRMS.Controllers
             }
         }
 
-
+        [Authorize(Roles = "HR,Admin")]
         [HttpPut("{id:long}")] //Resors Update
         public IActionResult UpDate([FromQuery] long id, [FromBody] SaveEmployeeDto employeeDto)
         {
@@ -255,8 +284,7 @@ namespace HRMS.Controllers
         }
 
 
-
-
+        [Authorize(Roles = "HR,Admin")]
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
         {

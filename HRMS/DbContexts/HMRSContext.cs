@@ -35,8 +35,16 @@ namespace HRMS.DbContexts
             // Seeding Admin
             //BCrypt.Net.BCrypt.HashPassword("Admin@123") ===>> "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG"
             modelBuilder.Entity<User>().HasData(
-                new User { Id = 1, Username = "Admin", IsAdmin = true, HashedPassword= "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG" }
+                new User { Id = 1, Username = "Admin", IsAdmin = true, HashedPassword = "$2a$11$HyG8CC9ek6Hl/IxENoWr7ua3Hq13/6W1.1.0ByA3Lu20llYdgAXBG" }
             );
+
+            modelBuilder.Entity<Employee>()
+            .HasIndex(x => x.UserId)
+            .IsUnique();
+
+            modelBuilder.Entity<User>()
+           .HasIndex(x => x.Username)
+           .IsUnique();
         }
 
 

@@ -24,5 +24,8 @@
         public string? DepartmentName { get; set; }
         public string? MangerName { get; set; }
 
+
+        public long? UseerId { get; set; }
+
     }
 }
